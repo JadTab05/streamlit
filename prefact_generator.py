@@ -46,7 +46,6 @@ if uploaded_file is not None:
             st.error("Il manque la colonne Supplier Name")
             st.stop()  # Stop the app if the column is not present
 
-        # Step 6: Function to convert DataFrame to Excel for download
         def to_excel(df, sheet_name='Sheet1'):
             output = io.BytesIO()
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
@@ -64,7 +63,6 @@ if uploaded_file is not None:
                 file_name = f"{supplier}_{start_date.strftime('%Y-%m-%d')}_to_{end_date.strftime('%Y-%m-%d')}.xlsx"
                 excel_files[file_name] = to_excel(temp_df)
 
-        # Step 7: Provide download links for each filtered dataset
         if excel_files:
             for file_name, data in excel_files.items():
                 st.download_button(
