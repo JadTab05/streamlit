@@ -5,3 +5,4 @@ xlsxwriter
 Pillow
 matplotlib==3.7.1
 seaborn==0.12.2
+numpy<2
