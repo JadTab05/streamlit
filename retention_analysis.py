@@ -42,30 +42,27 @@ def compute_time_series(df):
     return TS
 
 def plot_data(data):
-    """Create and display the time series plot with animation."""
+    """Create and display the time series plot."""
     plt.figure(figsize=(14, 7))
     sns.set_theme(style='whitegrid')
 
-    # Gradually show the plot
-    for i in range(len(data)):
-        plt.clf()  # Clear the previous plot
-        sns.lineplot(x=data.index, y=data['mean'], marker='o', color='royalblue', label='Mean', linewidth=2.5)
-        plt.plot(data.index, data['25%'], marker='o', color='orange', linestyle='--', label='Q1', linewidth=1.5)
-        plt.plot(data.index, data['50%'], marker='o', color='green', linestyle='--', label='Median', linewidth=1.5)
-        plt.plot(data.index, data['75%'], marker='o', color='red', linestyle='--', label='Q3', linewidth=1.5)
-        plt.fill_between(data.index, data['25%'], data['75%'], color='lightgrey', alpha=0.5, label='Interquartile Range')
+    # Plot the mean, Q1, Median, and Q3
+    sns.lineplot(x=data.index, y=data['mean'], marker='o', color='royalblue', label='Mean', linewidth=2.5)
+    plt.plot(data.index, data['25%'], marker='o', color='orange', linestyle='--', label='Q1', linewidth=1.5)
+    plt.plot(data.index, data['50%'], marker='o', color='green', linestyle='--', label='Median', linewidth=1.5)
+    plt.plot(data.index, data['75%'], marker='o', color='red', linestyle='--', label='Q3', linewidth=1.5)
+    plt.fill_between(data.index, data['25%'], data['75%'], color='lightgrey', alpha=0.5, label='Interquartile Range')
 
-        # Adding title and labels
-        plt.title('Evolution of Retention Duration Over Time', fontsize=18)
-        plt.xlabel('Date', fontsize=14)
-        plt.ylabel('Value', fontsize=14)
-        plt.grid(visible=True)
-        plt.legend()
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        
-        st.pyplot(plt)  # Display the plot in Streamlit
-        time.sleep(0.1)  # Wait before showing the next point
+    # Adding title and labels
+    plt.title('Evolution of Retention Duration Over Time', fontsize=18)
+    plt.xlabel('Date', fontsize=14)
+    plt.ylabel('Value', fontsize=14)
+    plt.grid(visible=True)
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+
+    st.pyplot(plt)
 
 # Main Streamlit App
 st.title('User Retention Analysis App')
