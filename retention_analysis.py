@@ -3,7 +3,7 @@ import numpy as np
 import streamlit as st
 import matplotlib.pyplot as plt
 import seaborn as sns
-import time
+from io import BytesIO
 
 def load_data(uploaded_file):
     """Load CSV data from the uploaded file."""
@@ -37,7 +37,7 @@ def compute_time_series(df):
     pivot_df = df.pivot_table(index='Date', columns='User ID', aggfunc=lambda x: 1, fill_value=0)
     months_active_per_user = pivot_df.cumsum(axis=0) / 30.0
     TS = months_active_per_user.replace(0, np.nan).apply(pd.Series.describe, axis=1)
-    TS.index = pd.to_datetime(TS.index)
+    TS.index = pd.to_datetime(TS.index)  # Ensure the index is datetime
     TS = TS[TS.index.day == 1]  # Retain only the first day of each month
     return TS
 
@@ -46,12 +46,12 @@ def plot_data(data):
     plt.figure(figsize=(14, 7))
     sns.set_theme(style='whitegrid')
 
-    # Plot the mean, Q1, Median, and Q3
-    sns.lineplot(x=data.index, y=data['mean'], marker='o', color='royalblue', label='Mean', linewidth=2.5)
-    plt.plot(data.index, data['25%'], marker='o', color='orange', linestyle='--', label='Q1', linewidth=1.5)
-    plt.plot(data.index, data['50%'], marker='o', color='green', linestyle='--', label='Median', linewidth=1.5)
-    plt.plot(data.index, data['75%'], marker='o', color='red', linestyle='--', label='Q3', linewidth=1.5)
-    plt.fill_between(data.index, data['25%'], data['75%'], color='lightgrey', alpha=0.5, label='Interquartile Range')
+    # Ensure the 'Date' column is used as the x-axis
+    sns.lineplot(x=data['Date'], y=data['mean'], marker='o', color='royalblue', label='Mean', linewidth=2.5)
+    plt.plot(data['Date'], data['25%'], marker='o', color='orange', linestyle='--', label='Q1', linewidth=1.5)
+    plt.plot(data['Date'], data['50%'], marker='o', color='green', linestyle='--', label='Median', linewidth=1.5)
+    plt.plot(data['Date'], data['75%'], marker='o', color='red', linestyle='--', label='Q3', linewidth=1.5)
+    plt.fill_between(data['Date'], data['25%'], data['75%'], color='lightgrey', alpha=0.5, label='Interquartile Range')
 
     # Adding title and labels
     plt.title('Evolution of Retention Duration Over Time', fontsize=18)
@@ -63,6 +63,14 @@ def plot_data(data):
     plt.tight_layout()
 
     st.pyplot(plt)
+
+def to_excel(df):
+    """Convert DataFrame to an Excel file in memory."""
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=True, sheet_name='Sheet1')
+    processed_data = output.getvalue()
+    return processed_data
 
 # Main Streamlit App
 st.title('User Retention Analysis App')
@@ -95,12 +103,23 @@ if uploaded_file:
         # Compute time series data
         time_series_data = compute_time_series(presence_df)
 
-        # Reset index for plotting
+        # Reset index for plotting and ensure 'Date' is a column
         time_series_data.reset_index(inplace=True)
-        
+        time_series_data['Date'] = pd.to_datetime(time_series_data['Date'])  # Ensure 'Date' is datetime
+
         # Plot data
         st.write("Generating plot...")
         plot_data(time_series_data)
+
+        # Download button for Excel
+        st.write("Download the time series data as an Excel file:")
+        excel_file = to_excel(time_series_data)
+        st.download_button(
+            label="Download Excel",
+            data=excel_file,
+            file_name='time_series_data.xlsx',
+            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
     except Exception as e:
         st.error(f"An error occurred: {e}")
 else:
